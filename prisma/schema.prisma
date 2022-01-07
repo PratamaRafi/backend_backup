@@ -1,0 +1,381 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//DIGITAL VACCINE BOOK
+model Province {
+  id         Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime
+
+  // relation fields
+  City         City[]
+  User_Address User_Address[]
+}
+
+model City {
+  id          Int       @id @default(autoincrement())
+  name        String
+  Province    Province? @relation(fields: [province_id], references: [id])
+  province_id Int?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime
+
+  // relation fields
+  User_Address User_Address[]
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  uid                 String    @unique
+  email               String    @unique
+  name                String?
+  username            String?
+  phone_number        String?
+  profile_picture_url String?
+  gender              Gender?
+  birthdate           String?
+  password            String?
+  is_active           Boolean?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime?
+  deleted_at          DateTime?
+
+  //relation fields
+  user_address  User_Address[]
+  user_bank     User_Bank[]
+  user_pets     UserPets[]
+  Consultations Consultations[]
+}
+
+model Admins {
+  id                  Int      @id @default(autoincrement())
+  uid                 String   @unique
+  email               String   @unique
+  name                String?
+  username            String?
+  phone_number        String?
+  profile_picture_url String?
+  gender              Gender?
+  password            String?
+  tokens              Token[]
+  is_active           Boolean  @default(true)
+  created_at          DateTime @default(now())
+}
+
+model Token {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime
+  updated_at DateTime
+  valid      Boolean
+  expiration DateTime
+
+  //relation fields
+  Admins   Admins @relation(fields: [AdminsId], references: [id])
+  AdminsId Int
+}
+
+model UserPets {
+  id                         Int       @id @default(autoincrement())
+  uid                        String    @unique
+  name                       String
+  species                    String?
+  breed                      String?
+  date_of_birth              DateTime?
+  color                      String?
+  profile_picture_url        String?
+  gender                     Gender?
+  is_neutered                Boolean?
+  is_dog_friendly            Boolean?
+  is_cat_friendly            Boolean?
+  is_under_10_child_friendly Boolean?
+  is_over_10_child_friendly  Boolean?
+  is_microchipped            Boolean?
+  is_purebred                Boolean?
+  created_at                 DateTime  @default(now())
+  updated_at                 DateTime? @updatedAt
+  deleted_at                 DateTime?
+
+  //relation fields
+  User           User             @relation(fields: [UserId], references: [uid])
+  UserId         String
+  VaccineHistory VaccineHistory[]
+  Consultations  Consultations[]
+}
+
+model User_Address {
+  id         Int       @id @default(autoincrement())
+  uid        String    @unique
+  label      String
+  address    String
+  is_default Boolean
+  created_at DateTime  @default(now())
+  updated_at DateTime
+  deleted_at DateTime?
+
+  //relation fields
+  City        City?     @relation(fields: [city_id], references: [id])
+  city_id     Int?
+  Province    Province? @relation(fields: [province_id], references: [id])
+  province_id Int?
+  User        User      @relation(fields: [user_id], references: [uid])
+  user_id     String
+}
+
+model User_Bank {
+  id             Int       @id @default(autoincrement())
+  uid            String    @unique
+  alias          String
+  bank_name      String
+  account_number String
+  bank_username  String
+  is_default     Boolean
+  created_at     DateTime  @default(now())
+  updated_at     DateTime
+  deleted_at     DateTime?
+
+  //relation fields
+  User   User @relation(fields: [UserId], references: [id])
+  UserId Int
+}
+
+model Vendor_Bank {
+  id             Int      @id @default(autoincrement())
+  uid            String   @unique
+  alias          String
+  bank_name      String
+  account_number String
+  bank_username  String
+  is_default     Boolean
+  created_at     DateTime @default(now())
+  updated_at     DateTime
+}
+
+model VaccineType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime
+
+  // relation fields
+  VaccineHistory VaccineHistory[]
+}
+
+model VaccineHistory {
+  id                Int          @id @default(autoincrement())
+  uid               String       @unique
+  pet               UserPets?    @relation(fields: [pet_id], references: [uid])
+  pet_id            String
+  veterinary        String
+  vaccine_photo     String
+  date_administered DateTime
+  is_manual         Boolean
+  date_valid_until  DateTime
+  vaccine_type      VaccineType? @relation(fields: [vaccine_type_id], references: [id])
+  vaccine_type_id   Int?
+  created_at        DateTime     @default(now())
+  updated_at        DateTime
+
+  // relation fields
+  VaccineHistoryPhoto VaccineHistoryPhoto[]
+}
+
+model VaccineHistoryPhoto {
+  id                 Int            @id @default(autoincrement())
+  uid                String         @unique
+  vaccine_history    VaccineHistory @relation(fields: [vaccine_history_id], references: [id])
+  vaccine_history_id Int
+  path               String
+  description        String
+  created_at         DateTime       @default(now())
+  updated_at         DateTime
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum Type {
+  Home_Care
+  Pet_Clinic
+  Veterinary
+}
+
+//VENDOR
+model Vendors {
+  id                  Int      @id @default(autoincrement())
+  uid                 String   @unique
+  email               String   @unique
+  is_verified         Boolean
+  vendor_role         Type?
+  price               Int
+  total_patient       Int?
+  rating              Float?
+  name                String
+  username            String
+  address             String
+  phone_number        String
+  profile_picture_url String
+  gender              Gender?
+  speciality          String
+  birthdate           String
+  google_maps_url     String
+  str_number          String
+  str_issued_date     String
+  alumni              String
+  city_id             Int
+  province_id         Int
+  lat                 String
+  long                String
+  days                String
+  ops_start_time      String
+  ops_end_time        String
+  duration            Int
+  rest                Int
+  total_poli          Int
+  image_url           String
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  // relation fields
+  vendor_documents Vendor_Documents[]
+  vendor_medtreats Vendor_Medtreats[]
+  Feedbacks        Feedbacks[]
+}
+
+model Schedule {
+  id                      Int      @id @default(autoincrement())
+  uid                     String   @unique
+  time_start              String
+  time_end                String
+  day_start               String
+  day_end                 String
+  homecare_customer_limit Int
+  price                   Int
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+}
+
+model Vendor_Documents {
+  id            Int      @id @default(autoincrement())
+  uid           String   @unique
+  document_type String
+  document_path String
+  created_at    DateTime @default(now())
+  updated_at    DateTime
+
+  //relation fields
+  Vendors   Vendors @relation(fields: [VendorsId], references: [id])
+  VendorsId Int
+}
+
+model Vendor_Medtreats {
+  id                   Int      @id @default(autoincrement())
+  uid                  String   @unique
+  medical_treatment_id String
+  is_homecare          Boolean
+  created_at           DateTime @default(now())
+  updated_at           DateTime
+
+  //relation fields
+  Vendors   Vendors @relation(fields: [VendorsId], references: [id])
+  VendorsId Int
+}
+
+model Class {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime  @default(now())
+  updated_at DateTime
+  deleted_at DateTime?
+
+  //relation fields
+  species Species[]
+}
+
+model Species {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime  @default(now())
+  updated_at DateTime
+  deleted_at DateTime?
+
+  //relation fields
+  Articles Articles[]
+  Class    Class      @relation(fields: [ClassId], references: [id])
+  ClassId  Int
+}
+
+model Medical_Treatment {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime
+}
+
+//TRANSACTIONAL
+model Consultations {
+  id                Int       @id @default(autoincrement())
+  uid               String    @unique
+  User              User?     @relation(fields: [user_id], references: [uid])
+  user_id           String
+  Pet               UserPets? @relation(fields: [pet_id], references: [uid])
+  pet_id            String
+  vendor_id         String
+  chat_room_id      String
+  vendor_role       Type?
+  diagnose          String
+  prerequisite      String
+  date              String
+  time_start        String
+  time_end          String
+  order_status      String
+  reject_reason     String
+  total_payment     Int
+  payment_image_url String
+  rating            Int
+  comment           String
+  user_bank_id      Int
+  vendor_bank_id    Int
+  user_address_id   Int
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+}
+
+model Articles {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  species    Species  @relation(fields: [species_id], references: [id])
+  species_id Int
+  image_url  String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime
+
+}
+
+model Feedbacks {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  Vendor     Vendors? @relation(fields: [vendor_id], references: [uid])
+  vendor_id  String
+  email      String
+  title      String
+  content    String
+  rating     Int
+  created_at DateTime @default(now())
+  updated_at DateTime
+}
